@@ -16,4 +16,4 @@ if (!$koneksi) {
 }
 
 // Mengatur karakter agar huruf dan simbol tersimpan dengan benar
-?>
+mysqli_set_charset($koneksi, "utf8mb4");

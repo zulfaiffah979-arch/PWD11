@@ -1,38 +1,127 @@
 <?php
-// Menguji koneksi dengan memanggil koneksi.php menggunakan require_once[cite: 18, 40]
-require_once "koneksi.php";
+// Halaman ini hanya boleh dibuka melalui pengiriman form (POST)
+if ($_SERVER["REQUEST_METHOD"] != "POST") {
+    header("Location: form_anggota.php");
+    exit;
+}
 
-$versi_server = mysqli_get_server_info($koneksi);
-mysqli_close($koneksi);
+// 1. Ambil data dan bersihkan dengan trim() serta isset()
+$no_anggota    = isset($_POST["no_anggota"]) ? trim($_POST["no_anggota"]) : "";
+$nama_lengkap  = isset($_POST["nama_lengkap"]) ? trim($_POST["nama_lengkap"]) : "";
+$email         = isset($_POST["email"]) ? trim($_POST["email"]) : "";
+$no_hp         = isset($_POST["no_hp"]) ? trim($_POST["no_hp"]) : "";
+$jenis_anggota = isset($_POST["jenis_anggota"]) ? trim($_POST["jenis_anggota"]) : "";
+$alamat        = isset($_POST["alamat"]) ? trim($_POST["alamat"]) : "";
+
+// 2. Validasi di sisi server menggunakan empty(), ctype_digit(), dan filter_var()
+$daftar_jenis_anggota = array("Mahasiswa", "Dosen", "Tenaga Kependidikan");
+$errors = array();
+
+// Validasi Nomor Anggota: Wajib diisi; hanya angka; maksimal 15 digit
+if (empty($no_anggota)) {
+    $errors[] = "Nomor Anggota tidak boleh kosong.";
+} elseif (!ctype_digit($no_anggota)) {
+    $errors[] = "Nomor Anggota hanya boleh berisi angka.";
+} elseif (strlen($no_anggota) > 15) {
+    $errors[] = "Nomor Anggota maksimal 15 digit.";
+}
+
+// Validasi Nama Lengkap: Wajib diisi; maksimal 100 karakter
+if (empty($nama_lengkap)) {
+    $errors[] = "Nama Lengkap tidak boleh kosong.";
+} elseif (strlen($nama_lengkap) > 100) {
+    $errors[] = "Nama Lengkap maksimal 100 karakter.";
+}
+
+// Validasi Email: Wajib diisi; format email valid; maksimal 100 karakter
+if (empty($email)) {
+    $errors[] = "Email tidak boleh kosong.";
+} elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+    $errors[] = "Format email tidak valid.";
+} elseif (strlen($email) > 100) {
+    $errors[] = "Email maksimal 100 karakter.";
+}
+
+// Validasi Nomor HP: Wajib diisi; hanya angka; 10 sampai 13 digit
+if (empty($no_hp)) {
+    $errors[] = "Nomor HP tidak boleh kosong.";
+} elseif (!ctype_digit($no_hp)) {
+    $errors[] = "Nomor HP hanya boleh berisi angka.";
+} elseif (strlen($no_hp) < 10 || strlen($no_hp) > 13) {
+    $errors[] = "Nomor HP harus berukuran 10 sampai 13 digit.";
+}
+
+// Validasi Jenis Anggota: Wajib dipilih: Mahasiswa, Dosen, atau Tenaga Kependidikan
+if (empty($jenis_anggota)) {
+    $errors[] = "Jenis Anggota wajib dipilih.";
+} elseif (!in_array($jenis_anggota, $daftar_jenis_anggota, true)) {
+    $errors[] = "Jenis Anggota tidak valid.";
+}
+
+// Validasi Alamat: Wajib diisi
+if (empty($alamat)) {
+    $errors[] = "Alamat tidak boleh kosong.";
+}
+
+// 3. Bila semua data valid, simpan ke database menggunakan Prepared Statement
+$berhasil = false;
+$pesan_db = "";
+
+if (empty($errors)) {
+    require_once "koneksi.php";
+
+    $sql = "INSERT INTO anggota (no_anggota, nama_lengkap, email, no_hp, jenis_anggota, alamat) VALUES (?, ?, ?, ?, ?, ?)";
+    $stmt = mysqli_prepare($koneksi, $sql);
+
+    if ($stmt) {
+        // Menggunakan mysqli_stmt_bind_param() dengan 6 parameter string ("ssssss")
+        mysqli_stmt_bind_param($stmt, "ssssss", $no_anggota, $nama_lengkap, $email, $no_hp, $jenis_anggota, $alamat);
+
+        if (mysqli_stmt_execute($stmt)) {
+            $berhasil = true;
+        } else {
+            $pesan_db = mysqli_stmt_error($stmt);
+        }
+
+        mysqli_stmt_close($stmt);
+    } else {
+        $pesan_db = mysqli_error($koneksi);
+    }
+
+    mysqli_close($koneksi);
+
+    // Jika berhasil, alihkan kembali ke form dengan status sukses
+    if ($berhasil) {
+        header("Location: form_anggota.php?status=sukses");
+        exit;
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <title>Tes Koneksi Database</title>
+    <title>Hasil Penyimpanan Data</title>
     <style>
         body { font-family: Arial, sans-serif; margin: 40px; }
         h1 { color: #1f3864; }
-        .sukses { background: #e6f4ea; border-left: 5px solid #2e7d32; padding: 10px; }
-        td { padding: 4px 16px 4px 0; }
+        .gagal { background: #fdecea; border-left: 5px solid #c0392b; padding: 10px; }
     </style>
 </head>
 <body>
-    <h1>Tes Koneksi Database</h1>
-    <p class="sukses">Koneksi ke MySQL berhasil[cite: 18].</p>
-    <table>
-        <tr>
-            <td>Host</td>
-            <td>: <?php echo htmlspecialchars($host); ?></td>
-        </tr>
-        <tr>
-            <td>Database</td>
-            <td>: <?php echo htmlspecialchars($database); ?></td>
-        </tr>
-        <tr>
-            <td>Versi server</td>
-            <td>: <?php echo htmlspecialchars($versi_server); ?></td>
-        </tr>
-    </table>
+    <?php if (!empty($errors)) { ?>
+        <h1>Data Tidak Valid</h1>
+        <p class="gagal">Data belum dapat disimpan. Perbaiki kesalahan:</p>
+        <ul>
+            <?php foreach ($errors as $pesan) { ?>
+                <li><?php echo htmlspecialchars($pesan, ENT_QUOTES, 'UTF-8'); ?></li>
+            <?php } ?>
+        </ul>
+    <?php } else { ?>
+        <h1>Data Gagal Disimpan</h1>
+        <p class="gagal">Terjadi kesalahan saat menyimpan data ke database.</p>
+        <p>Pesan dari MySQL: <?php echo htmlspecialchars($pesan_db, ENT_QUOTES, 'UTF-8'); ?></p>
+    <?php } ?>
+    <p><a href="javascript:history.back()">Kembali dan perbaiki data</a></p>
 </body>
 </html>

@@ -1,11 +1,11 @@
 <?php
-// Halaman ini hanya boleh dibuka melalui pengiriman form (POST)[cite: 30, 40]
+// Halaman ini hanya boleh dibuka melalui pengiriman form (POST)
 if ($_SERVER["REQUEST_METHOD"] != "POST") {
     header("Location: form_anggota.php");
     exit;
 }
 
-// 1. Ambil data dan bersihkan dengan trim() serta isset()[cite: 40]
+// 1. Ambil data dan bersihkan dengan trim() serta isset()
 $no_anggota    = isset($_POST["no_anggota"]) ? trim($_POST["no_anggota"]) : "";
 $nama_lengkap  = isset($_POST["nama_lengkap"]) ? trim($_POST["nama_lengkap"]) : "";
 $email         = isset($_POST["email"]) ? trim($_POST["email"]) : "";
@@ -13,11 +13,11 @@ $no_hp         = isset($_POST["no_hp"]) ? trim($_POST["no_hp"]) : "";
 $jenis_anggota = isset($_POST["jenis_anggota"]) ? trim($_POST["jenis_anggota"]) : "";
 $alamat        = isset($_POST["alamat"]) ? trim($_POST["alamat"]) : "";
 
-// 2. Validasi di sisi server menggunakan empty(), ctype_digit(), dan filter_var()[cite: 39, 40]
+// 2. Validasi di sisi server menggunakan empty(), ctype_digit(), dan filter_var()
 $daftar_jenis_anggota = array("Mahasiswa", "Dosen", "Tenaga Kependidikan");
 $errors = array();
 
-// Validasi Nomor Anggota: Wajib diisi; hanya angka; maksimal 15 digit[cite: 39]
+// Validasi Nomor Anggota: Wajib diisi; hanya angka; maksimal 15 digit
 if (empty($no_anggota)) {
     $errors[] = "Nomor Anggota tidak boleh kosong.";
 } elseif (!ctype_digit($no_anggota)) {
@@ -26,14 +26,14 @@ if (empty($no_anggota)) {
     $errors[] = "Nomor Anggota maksimal 15 digit.";
 }
 
-// Validasi Nama Lengkap: Wajib diisi; maksimal 100 karakter[cite: 39]
+// Validasi Nama Lengkap: Wajib diisi; maksimal 100 karakter
 if (empty($nama_lengkap)) {
     $errors[] = "Nama Lengkap tidak boleh kosong.";
 } elseif (strlen($nama_lengkap) > 100) {
     $errors[] = "Nama Lengkap maksimal 100 karakter.";
 }
 
-// Validasi Email: Wajib diisi; format email valid; maksimal 100 karakter[cite: 39]
+// Validasi Email: Wajib diisi; format email valid; maksimal 100 karakter
 if (empty($email)) {
     $errors[] = "Email tidak boleh kosong.";
 } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
@@ -42,7 +42,7 @@ if (empty($email)) {
     $errors[] = "Email maksimal 100 karakter.";
 }
 
-// Validasi Nomor HP: Wajib diisi; hanya angka; 10 sampai 13 digit[cite: 39]
+// Validasi Nomor HP: Wajib diisi; hanya angka; 10 sampai 13 digit
 if (empty($no_hp)) {
     $errors[] = "Nomor HP tidak boleh kosong.";
 } elseif (!ctype_digit($no_hp)) {
@@ -51,19 +51,19 @@ if (empty($no_hp)) {
     $errors[] = "Nomor HP harus berukuran 10 sampai 13 digit.";
 }
 
-// Validasi Jenis Anggota: Wajib dipilih: Mahasiswa, Dosen, atau Tenaga Kependidikan[cite: 39]
+// Validasi Jenis Anggota: Wajib dipilih: Mahasiswa, Dosen, atau Tenaga Kependidikan
 if (empty($jenis_anggota)) {
     $errors[] = "Jenis Anggota wajib dipilih.";
 } elseif (!in_array($jenis_anggota, $daftar_jenis_anggota, true)) {
     $errors[] = "Jenis Anggota tidak valid.";
 }
 
-// Validasi Alamat: Wajib diisi[cite: 39]
+// Validasi Alamat: Wajib diisi
 if (empty($alamat)) {
     $errors[] = "Alamat tidak boleh kosong.";
 }
 
-// 3. Bila semua data valid, simpan ke database menggunakan Prepared Statement[cite: 40]
+// 3. Bila semua data valid, simpan ke database menggunakan Prepared Statement
 $berhasil = false;
 $pesan_db = "";
 
@@ -74,7 +74,7 @@ if (empty($errors)) {
     $stmt = mysqli_prepare($koneksi, $sql);
 
     if ($stmt) {
-        // Menggunakan mysqli_stmt_bind_param() dengan 6 parameter string ("ssssss")[cite: 8, 40]
+        // Menggunakan mysqli_stmt_bind_param() dengan 6 parameter string ("ssssss")
         mysqli_stmt_bind_param($stmt, "ssssss", $no_anggota, $nama_lengkap, $email, $no_hp, $jenis_anggota, $alamat);
 
         if (mysqli_stmt_execute($stmt)) {
@@ -82,6 +82,7 @@ if (empty($errors)) {
         } else {
             $pesan_db = mysqli_stmt_error($stmt);
         }
+
         mysqli_stmt_close($stmt);
     } else {
         $pesan_db = mysqli_error($koneksi);
@@ -89,7 +90,7 @@ if (empty($errors)) {
 
     mysqli_close($koneksi);
 
-    // Jika berhasil, alihkan kembali ke form dengan status sukses[cite: 30, 40]
+    // Jika berhasil, alihkan kembali ke form dengan status sukses
     if ($berhasil) {
         header("Location: form_anggota.php?status=sukses");
         exit;

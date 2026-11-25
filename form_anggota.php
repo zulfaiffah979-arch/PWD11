@@ -1,5 +1,5 @@
 <?php
-// Membaca parameter status dari URL (redirect setelah sukses)[cite: 27, 40]
+// Membaca parameter status dari URL (redirect setelah sukses)
 $status = isset($_GET["status"]) ? $_GET["status"] : "";
 ?>
 <!DOCTYPE html>
