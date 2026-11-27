@@ -18,6 +18,7 @@ $status = isset($_GET["status"]) ? $_GET["status"] : "";
     </style>
 </head>
 <body>
+    <button type="button" onclick="window.location.href='data.php'">Lihat Data Anggota</button>
     <h1>Pendaftaran Anggota Perpustakaan Kampus</h1>
 
     <?php if ($status === "sukses") { ?>

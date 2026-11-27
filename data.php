@@ -73,14 +73,22 @@ $jumlah = mysqli_num_rows($hasil); // untuk menghitung jumlah data
 
         <?php $no = 1; while ($baris = mysqli_fetch_assoc($hasil)) { ?>
         <tr>
-            <td><?php echo $no++; ?></td>
+            <td><?php echo $baris["id"]; ?></td>
             <td><?php echo htmlspecialchars($baris["no_anggota"], ENT_QUOTES, 'UTF-8'); ?></td>
             <td><?php echo htmlspecialchars($baris["nama_lengkap"], ENT_QUOTES, 'UTF-8'); ?></td>
             <td><?php echo htmlspecialchars($baris["email"], ENT_QUOTES, 'UTF-8'); ?></td>
             <td><?php echo htmlspecialchars($baris["no_hp"], ENT_QUOTES, 'UTF-8'); ?></td>
             <td><?php echo htmlspecialchars($baris["jenis_anggota"], ENT_QUOTES, 'UTF-8'); ?></td>
             <td><?php echo htmlspecialchars($baris["alamat"], ENT_QUOTES, 'UTF-8'); ?></td>
-        </tr>
+            <td>
+                
+                <a href="edit.php?id=<?= (int) $baris['id']; ?>">Edit</a>
+                <form action="hapus.php" method="post" style="display:inline;"onsubmit="return confirm('Yakin ingin menghapus data ini?');">
+                    <input type="hidden" name="id" value="<?= $baris['id']; ?>">
+                    <button type="submit">Hapus</button>
+                </form>
+            </td>
+        </tr>   
         <?php } ?>
 
     </table>
